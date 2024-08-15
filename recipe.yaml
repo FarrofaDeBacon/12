@@ -1,0 +1,141 @@
+$engine: 3
+name: Faroeste
+version: 1.0.0
+author: Abdulkadir Aktaş
+description: Bu tarif Faroeste için Abdulkadir Aktaş tarafından hazırlanmıştır.
+
+variables:
+    steamApiKey : none
+    discord_webhook_for_logs : DISCORD_WEBHOOK_HERE
+    discord_guild_id : none
+    discord_bot_token : none
+    frp_language : en
+    server_locale : en-US
+    load_server_icon : Faroeste.png
+    sv_enforceGameBuild : 1491
+    datadog_key : none
+    datadog_hostname : none
+    datadog_site : datadoghq.com
+tasks:
+#  Download Base Files
+  - action: download_github
+    src: https://github.com/Faroeste-Roleplay/txAdminRecipe
+    ref: main
+    dest: ./tmp/FRP_txAdminRecipe
+  
+  - action: move_path
+    src: ./tmp/FRP_txAdminRecipe/server.cfg
+    dest: ./server.cfg
+  
+  - action: move_path
+    src: ./tmp/FRP_txAdminRecipe/Faroeste.png
+    dest: ./Faroeste.png
+
+# Prepare Database
+  - action: connect_database
+  - action: query_database
+    query: |      
+      DROP DATABASE IF EXISTS `faroeste`;
+      CREATE DATABASE IF NOT EXISTS `faroeste`;
+
+  - action: write_file
+    file: ./tmp/delete.sql
+    append: true
+    data: |
+      ensure
+
+  - action: replace_string
+    file: ./tmp/delete.sql
+    search: "ensure"
+    replace: "DROP DATABASE IF EXISTS `{{dbName}}`"
+  
+  - action: query_database
+    file: ./tmp/delete.sql
+  
+  # - action: query_database
+  #   file: ./tmp/FRP_txAdminRecipe/db.sql
+
+# STANDALONE CFX
+  - action: download_github
+    src: https://github.com/citizenfx/cfx-server-data
+    subpath: resources
+    dest: ./resources/[cfx-default]    
+    
+# ox_side    
+  - action: download_file
+    url: https://github.com/overextended/oxmysql/releases/latest/download/oxmysql.zip
+    path: ./tmp/oxmysql.zip
+  
+  - action: unzip
+    dest: ./resources/[ox]/
+    src: ./tmp/oxmysql.zip
+
+  - action: download_file
+    url: https://github.com/overextended/ox_lib/releases/latest/download/ox_lib.zip
+    path: ./tmp/ox_lib.zip
+  
+  - action: unzip
+    dest: ./resources/[ox]/
+    src: ./tmp/ox_lib.zip
+
+# faroeste side  
+  - action: download_github
+    src: https://github.com/Faroeste-Roleplay/frp_logs
+    ref: main
+    dest : ./resources/[faroeste]/frp_logs    
+  
+  - action: download_github
+    src: https://github.com/Faroeste-Roleplay/frp_lib
+    ref: main
+    dest : ./resources/[faroeste]/frp_lib
+
+  - action: download_github
+    src: https://github.com/Faroeste-Roleplay/frp_game_events
+    ref: main
+    dest : ./resources/[faroeste]/frp_game_events
+
+  # yazı değiştirelim
+  - action: replace_string
+    file: ./resources/[faroeste]/frp_logs/config.lua
+    search: "DISCORD_WEBHOOK_HERE"
+    replace : "{{discord_webhook_for_logs}}"
+
+
+  - action: download_github
+    src: https://github.com/Faroeste-Roleplay/frp_core
+    ref: main
+    dest: ./resources/[faroeste]/frp_core
+
+  - action: query_database
+    file: ./resources/[faroeste]/frp_core/db.sql
+
+  - action: download_github
+    src: https://github.com/Faroeste-Roleplay/frp_creator
+    ref: main
+    dest: ./resources/[faroeste]/frp_creator
+    
+  - action: download_github
+    src: https://github.com/Faroeste-Roleplay/frp_queue
+    ref: main
+    dest: ./resources/[faroeste]/frp_queue
+
+  - action: download_github
+    src: https://github.com/Faroeste-Roleplay/frp_spawn_selector
+    ref: main
+    dest: ./resources/[faroeste]/frp_spawn_selector
+        
+  - action: download_github
+    src: https://github.com/Faroeste-Roleplay/frp_death_state
+    ref: main
+    dest: ./resources/[faroeste]/frp_death_state
+
+  - action: download_github
+    src: https://github.com/Faroeste-Roleplay/frp_weapon
+    ref: main
+    dest: ./resources/[faroeste]/frp_weapon
+
+
+
+# Clean tmp
+  - action: remove_path
+    path: ./tmp
